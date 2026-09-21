@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lernvisualisierungen — Brandeis Consulting</title>
+<meta name="description" content="Interaktive Lerneinheiten zu SAP-Themen, gehostet über GitHub Pages und einbettbar in das Lernportal.">
+<link rel="stylesheet" href="assets/base.css">
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">Brandeis Consulting GmbH</p>
+  <h1>Lernvisualisierungen</h1>
+  <p class="lede">Interaktive Einzelseiten zu SAP-Themen. Jede Lerneinheit ist eine eigenständige HTML-Datei ohne externe Abhängigkeiten und lässt sich direkt aufrufen oder als iframe in das Lernportal einbetten.</p>
+</header>
+
+<main class="list">
+
+  <article class="item">
+    <p class="meta">SAP Embedded Analytics</p>
+    <h2>Slicing und Dicing</h2>
+    <p class="desc">N-dimensionale Daten als zweidimensionale Tabelle. Fünf Dimensionen eines IS-U-Abrechnungswürfels, drei davon auf den Würfelachsen, dazu Aufriss, Liniengraph und die daraus entstehende Selektion auf der Analytical Query.</p>
+    <div class="actions">
+      <a class="btn" href="slicing-dicing/">Öffnen</a>
+      <a class="btn plain" href="slicing-dicing/index.html" download>Datei laden</a>
+    </div>
+    <details>
+      <summary>Einbettung in das Lernportal</summary>
+<pre>&lt;iframe id="viz-slicing-dicing"
+        src="https://BENUTZER.github.io/lernvisualisierungen/slicing-dicing/"
+        style="width:100%;border:1px solid #d6cfc2;height:2400px"
+        loading="lazy" title="Slicing und Dicing"&gt;&lt;/iframe&gt;
+&lt;script&gt;
+addEventListener("message", function (e) {
+  if (e.origin !== "https://BENUTZER.github.io") return;
+  if (e.data &amp;&amp; e.data.type === "brandeis:height") {
+    document.getElementById("viz-slicing-dicing").style.height = e.data.height + "px";
+  }
+});
+&lt;/script&gt;</pre>
+    </details>
+  </article>
+
+</main>
+
+<footer class="foot">
+  Beispieldaten in den Lerneinheiten sind frei erfunden und dienen nur der Veranschaulichung.
+</footer>
+
+</div>
+</body>
+</html>

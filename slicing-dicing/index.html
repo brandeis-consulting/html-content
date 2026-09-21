@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="index,follow">
+<meta name="description" content="Interaktive Lerneinheit zu Slicing und Dicing in SAP Embedded Analytics: n-dimensionale Daten als zweidimensionale Tabelle.">
+<style>
+:root{color-scheme:light dark}
+html,body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Slicing und Dicing in SAP Embedded Analytics</title>
+<style>
+:root{
+  --f-sans:Arial,"Helvetica Neue",Helvetica,"Liberation Sans",sans-serif;
+  --f-mono:Consolas,"DejaVu Sans Mono","Courier New",monospace;
+  --ink:#10201f;
+  --ink-2:#3b524f;
+  --ink-3:#6c807d;
+  --ground:#f2efe8;
+  --panel:#fbf9f5;
+  --panel-2:#ebe6dc;
+  --line:#d6cfc2;
+  --line-2:#bdb4a3;
+  --accent:#0f6b63;
+  --accent-soft:#d6e8e5;
+  --strom:#e0a21a;
+  --gas:#b8562f;
+  --wasser:#2f6fa8;
+  --waerme:#9a2f45;
+  --p1:#23625c; --p2:#5b7a36; --p3:#a9762b; --p4:#7d4f52;
+  --shadow:0 1px 0 rgba(16,32,31,.06);
+}
+:root:not([data-theme="light"]){
+  @media (prefers-color-scheme: dark){
+    --ink:#e8e4da; --ink-2:#b3bdba; --ink-3:#7f8f8c;
+    --ground:#101917; --panel:#17211f; --panel-2:#1f2b29;
+    --line:#2c3a37; --line-2:#3e504c;
+    --accent:#4fbdae; --accent-soft:#183833;
+    --strom:#f0bb42; --gas:#d97a4e; --wasser:#5b9ed6; --waerme:#cf5a70;
+    --p1:#4fbdae; --p2:#9dbb63; --p3:#dfa653; --p4:#c78c8f;
+    --shadow:0 1px 0 rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#e8e4da; --ink-2:#b3bdba; --ink-3:#7f8f8c;
+  --ground:#101917; --panel:#17211f; --panel-2:#1f2b29;
+  --line:#2c3a37; --line-2:#3e504c;
+  --accent:#4fbdae; --accent-soft:#183833;
+  --strom:#f0bb42; --gas:#d97a4e; --wasser:#5b9ed6; --waerme:#cf5a70;
+  --p1:#4fbdae; --p2:#9dbb63; --p3:#dfa653; --p4:#c78c8f;
+  --shadow:0 1px 0 rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--ground);color:var(--ink);
+  font-family:var(--f-sans);
+  font-size:15px;line-height:1.55;margin:0;
+}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 56px}
+
+h1,h2,h3{font-family:var(--f-sans);font-weight:700;letter-spacing:0;text-wrap:balance;margin:0}
+h1{font-size:clamp(26px,4.4vw,38px);line-height:1.08;text-transform:uppercase}
+h3{font-size:14.5px;text-transform:uppercase;letter-spacing:.05em}
+p{margin:0}
+.subhead{font-family:var(--f-sans);font-size:clamp(15px,2vw,18px);font-weight:700;
+  text-transform:uppercase;letter-spacing:.07em;color:var(--accent);margin-top:6px}
+.lede{max-width:64ch;color:var(--ink-2);margin-top:12px}
+.axlegend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px;font-family:var(--f-mono);font-size:11.5px;color:var(--ink-2)}
+.axlegend span b{font-weight:600;color:var(--ink)}
+.axlegend .off{color:var(--ink-3)}
+.chartwrap{overflow-x:auto;margin-top:6px}
+svg.chart{display:block;width:100%;height:auto;min-width:440px}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .axis{stroke:var(--ink-3);stroke-width:1}
+.chart text{font-family:var(--f-mono);font-size:11px;fill:var(--ink-3)}
+.chart text.cat{font-family:var(--f-sans);font-size:11.5px;fill:var(--ink-2)}
+.chart .ln{fill:none;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+.chart .pt{stroke:var(--panel);stroke-width:1.5}
+.serieslegend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12.5px;color:var(--ink-2)}
+.serieslegend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+
+header.top{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:26px}
+
+.layout{display:grid;grid-template-columns:278px minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:860px){.layout{grid-template-columns:1fr}}
+
+.panel{background:var(--panel);border:1px solid var(--line);padding:16px;box-shadow:var(--shadow)}
+.rail{display:flex;flex-direction:column;gap:14px}
+
+.dimblock{display:flex;flex-direction:column;gap:8px}
+.dimhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;border-bottom:1px solid var(--line);padding-bottom:5px}
+.dimhead .tech{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3)}
+.role{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  border:1px solid var(--line-2);color:var(--ink-3);padding:1px 5px;border-radius:2px;white-space:nowrap}
+.role.on{border-color:var(--accent);color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+button{font:inherit;color:inherit;cursor:pointer}
+.chip{border:1px solid var(--line-2);background:transparent;color:var(--ink-3);
+  padding:4px 10px;border-radius:2px;font-size:13px;line-height:1.3;
+  display:inline-flex;align-items:center;gap:6px;transition:background .12s,color .12s,border-color .12s}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.45}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--ground)}
+.chip[aria-pressed="true"] .dot{opacity:1}
+.chip:focus-visible,select:focus-visible,.preset:focus-visible,.minilink:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chip.s-STROM[aria-pressed="true"]{background:var(--strom);border-color:var(--strom);color:#1a1405}
+.chip.s-GAS[aria-pressed="true"]{background:var(--gas);border-color:var(--gas);color:#fff}
+.chip.s-WASSER[aria-pressed="true"]{background:var(--wasser);border-color:var(--wasser);color:#fff}
+.chip.s-FERNW[aria-pressed="true"]{background:var(--waerme);border-color:var(--waerme);color:#fff}
+
+.minilink{background:none;border:0;padding:0;font-size:11.5px;color:var(--accent);text-decoration:underline;text-underline-offset:2px;align-self:flex-start}
+
+.presets{display:flex;flex-direction:column;gap:6px}
+.preset{text-align:left;border:1px solid var(--line-2);background:var(--panel-2);padding:7px 10px;border-radius:2px;font-size:13px}
+.preset b{display:block;font-family:var(--f-sans);font-size:13.5px;letter-spacing:.04em;text-transform:uppercase;font-weight:700}
+.preset span{color:var(--ink-3);font-size:12px}
+.preset:hover{border-color:var(--accent)}
+
+.stage{display:flex;flex-direction:column;gap:20px;min-width:0}
+
+.opbar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;
+  border-left:4px solid var(--accent);background:var(--accent-soft);padding:12px 14px}
+.opname{font-family:var(--f-sans);font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;line-height:1}
+.opdesc{color:var(--ink-2);font-size:13.5px;max-width:56ch}
+.opcount{font-family:var(--f-mono);font-size:12px;color:var(--ink-2);white-space:nowrap;text-align:right}
+
+.controls{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+label.fld{display:flex;flex-direction:column;gap:4px;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-family:var(--f-mono)}
+select{font:inherit;font-size:14px;background:var(--panel);color:var(--ink);border:1px solid var(--line-2);padding:5px 8px;border-radius:2px}
+
+figure.cube{margin:0;position:relative}
+.cubewrap{overflow-x:auto;margin-top:14px}
+svg.iso{display:block;width:100%;height:auto;max-width:100%;min-width:500px}
+.axis-label{font-family:var(--f-mono);font-size:11px;fill:var(--ink-3);letter-spacing:.08em;text-transform:uppercase}
+.tick-label{font-family:var(--f-sans);font-size:11.5px;fill:var(--ink-2)}
+.cell{cursor:pointer}
+.cell .f{stroke:var(--panel);stroke-width:.8;stroke-linejoin:round}
+.cell:focus-visible{outline:2px solid var(--accent)}
+figcaption{font-size:12.5px;color:var(--ink-3);margin-top:10px;max-width:74ch}
+
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--ground);
+  padding:8px 10px;font-size:12px;line-height:1.5;border-radius:2px;max-width:250px;z-index:5;
+  font-family:var(--f-mono)}
+.tip b{font-family:var(--f-sans);font-weight:600}
+
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+caption{text-align:left;font-size:12px;color:var(--ink-3);padding-bottom:8px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th[scope="row"],thead th:first-child{text-align:left}
+thead th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);border-bottom:1px solid var(--ink-3);font-weight:600}
+td{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+tbody tr:hover td,tbody tr:hover th{background:var(--panel-2)}
+tr.total th,tr.total td{border-top:2px solid var(--ink);border-bottom:0;font-weight:600}
+.bar{display:block;height:3px;background:var(--accent);margin-top:3px;margin-left:auto}
+
+pre.code{margin:0;background:var(--panel-2);border:1px solid var(--line);padding:14px;
+  font-family:var(--f-mono);font-size:12.5px;line-height:1.6;color:var(--ink);
+  overflow-x:auto;white-space:pre}
+pre.code .kw{color:var(--accent);font-weight:600}
+pre.code .cm{color:var(--ink-3)}
+
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:18px;margin-top:6px}
+.note h3{margin-bottom:6px}
+.note p{font-size:13.5px;color:var(--ink-2)}
+
+footer.foot{margin-top:40px;border-top:1px solid var(--line);padding-top:14px;font-size:12px;color:var(--ink-3)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">SAP Embedded Analytics · Analytical Query Z_C_ABRECHNUNG_SPARTE</p>
+  <h1>Slicing und Dicing</h1>
+  <p class="subhead">N-dimensionale Daten als 2-dimensionale Tabelle darstellen</p>
+  <p class="lede">Abrechnungsdaten eines kommunalen Versorgers mit fünf Dimensionen: Sparte, Kundengruppe, Quartal, Netzgebiet, Abrechnungsart. Drei davon liegen auf den Achsen des Würfels, die übrigen werden verdichtet. Mitglieder links an- und abwählen, Achsen tauschen und beobachten, welche OLAP-Operation dabei entsteht.</p>
+</header>
+
+<div class="layout">
+
+  <aside class="rail" id="rail"></aside>
+
+  <main class="stage">
+
+    <section class="opbar">
+      <div>
+        <p class="eyebrow">Erkannte Operation</p>
+        <p class="opname" id="op-name">Roll-up</p>
+        <p class="opdesc" id="op-desc"></p>
+      </div>
+      <p class="opcount" id="op-count"></p>
+    </section>
+
+    <figure class="cube panel">
+      <div class="dimhead"><h3>Würfelachsen</h3><span class="tech">3 von 5 Dimensionen</span></div>
+      <div class="controls" style="margin-top:12px">
+        <label class="fld">Achse rechts <select id="ax-x"></select></label>
+        <label class="fld">Achse links <select id="ax-y"></select></label>
+        <label class="fld">Achse hoch <select id="ax-z"></select></label>
+        <label class="fld">Kennzahl
+          <select id="sel-measure">
+            <option value="betrag">Abrechnungsbetrag (T€)</option>
+            <option value="anzahl">Anzahl Abrechnungen</option>
+            <option value="avg">Ø Betrag je Abrechnung (€)</option>
+          </select>
+        </label>
+      </div>
+      <div class="cubewrap"><svg class="iso" id="iso" viewBox="0 0 860 470" role="img" aria-labelledby="iso-title">
+        <title id="iso-title">Isometrischer Würfel aus den drei gewählten Dimensionen</title>
+      </svg></div>
+      <div class="tip" id="tip" hidden></div>
+      <div class="axlegend" id="axlegend"></div>
+      <figcaption id="cube-caption"></figcaption>
+    </figure>
+
+    <section class="panel">
+      <div class="dimhead" style="margin-bottom:12px"><h3>Aufriss im Bericht</h3><span class="tech">FIORI MULTIDIMENSIONAL REPORT</span></div>
+      <div class="controls" style="margin-bottom:14px">
+        <label class="fld">Zeilen <select id="sel-rows"></select></label>
+        <label class="fld">Spalten <select id="sel-cols"></select></label>
+      </div>
+      <div class="tablewrap"><table id="pivot"><caption id="pivot-caption"></caption></table></div>
+      <div class="chartwrap"><svg class="chart" id="chart" role="img" aria-labelledby="chart-title">
+        <title id="chart-title">Liniengraph derselben Tabelle</title>
+      </svg></div>
+      <div class="serieslegend" id="chart-legend"></div>
+      <p style="font-size:12.5px;color:var(--ink-3);margin-top:10px">Dieselben Zahlen wie in der Tabelle: eine Linie je Zeile, die Spalten bilden die Kategorieachse.</p>
+    </section>
+
+    <section class="panel">
+      <div class="dimhead" style="margin-bottom:10px"><h3>Was das Backend daraus macht</h3><span class="tech">CDS · ANALYTICAL QUERY</span></div>
+      <pre class="code" id="code"></pre>
+    </section>
+
+    <section class="notes">
+      <div class="note">
+        <h3>Slice</h3>
+        <p>Eine Dimension wird auf genau ein Mitglied festgelegt, die übrigen bleiben vollständig. Aus dem Würfel wird eine Scheibe, die Dimension verschwindet aus dem Aufriss und wandert in den Berichtskopf.</p>
+      </div>
+      <div class="note">
+        <h3>Dice</h3>
+        <p>Mehrere Dimensionen werden auf Teilmengen eingeschränkt. Es entsteht ein kleinerer Teilwürfel mit unveränderter Dimensionalität, im Bericht eine Kombination von Filtern.</p>
+      </div>
+      <div class="note">
+        <h3>Fünf Dimensionen, drei Achsen</h3>
+        <p>Ein Würfel lässt sich nur dreidimensional zeichnen, ein Datenwürfel hat beliebig viele Kanten. Die beiden Dimensionen ohne Achse verschwinden nicht, sie werden über ihre aktive Selektion verdichtet. Genau das sind die freien Merkmale einer Query.</p>
+      </div>
+      <div class="note">
+        <h3>Vorsicht bei Quotienten</h3>
+        <p>Der Ø Betrag je Abrechnung darf nicht aufsummiert werden. Er entsteht nach der Aggregation aus Summe Betrag durch Summe Abrechnungen, in CDS als berechnete Kennzahl auf Query-Ebene.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer class="foot">
+  Beispieldaten, frei erfunden und nur zur Demonstration. Größenordnungen an einem kommunalen Querverbund mit rund 130.000 Abrechnungen pro Jahr orientiert.
+</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+const DIMS = {
+  sparte:{label:"Sparte", tech:"SPARTE", members:[
+    {id:"STROM",label:"Strom",cls:"s-STROM",color:"--strom"},
+    {id:"GAS",label:"Gas",cls:"s-GAS",color:"--gas"},
+    {id:"WASSER",label:"Wasser",cls:"s-WASSER",color:"--wasser"},
+    {id:"FERNW",label:"Fernwärme",cls:"s-FERNW",color:"--waerme"}]},
+  kunde:{label:"Kundengruppe", tech:"KUNDENGRP", members:[
+    {id:"PRIV",label:"Privat"},{id:"GEW",label:"Gewerbe"},{id:"IND",label:"Industrie"}]},
+  quartal:{label:"Quartal", tech:"FISCPER3", members:[
+    {id:"Q1",label:"Q1/2026"},{id:"Q2",label:"Q2/2026"},{id:"Q3",label:"Q3/2026"},{id:"Q4",label:"Q4/2026"}]},
+  netz:{label:"Netzgebiet", tech:"NETZGEBIET", members:[
+    {id:"INN",label:"Innenstadt"},{id:"NORD",label:"Nord"},{id:"SUED",label:"Süd"},{id:"UMLD",label:"Umland"}]},
+  abrart:{label:"Abrechnungsart", tech:"ABRVORGANG", members:[
+    {id:"TURN",label:"Turnus"},{id:"ZWIS",label:"Zwischen"},{id:"SCHL",label:"Schluss"}]}
+};
+const DIMKEYS = ["sparte","kunde","quartal","netz","abrart"];
+const PAL = ["--p1","--p2","--p3","--p4"];
+
+// --- Faktenbasis ------------------------------------------------------------
+const BETRAG = { STROM:[4180,2640,5120], GAS:[3120,1480,2810], WASSER:[1390,620,905], FERNW:[985,540,1245] };
+const ANZAHL = { STROM:[52000,4800,420], GAS:[31000,2600,190], WASSER:[28000,1900,140], FERNW:[9800,700,95] };
+const SAISON = { STROM:[1.08,0.94,0.92,1.06], GAS:[1.42,0.82,0.48,1.28], WASSER:[0.92,1.04,1.12,0.92], FERNW:[1.55,0.78,0.35,1.32] };
+const ABR_Q  = [0.90,0.95,1.00,1.15];
+const NETZ   = { PRIV:[0.31,0.28,0.26,0.15], GEW:[0.42,0.24,0.22,0.12], IND:[0.18,0.38,0.29,0.15] };
+const ART_B  = [0.80,0.13,0.07];
+const ART_A  = [0.72,0.18,0.10];
+
+const FACTS = [];
+DIMS.sparte.members.forEach(s=>DIMS.kunde.members.forEach((k,ki)=>DIMS.quartal.members.forEach((q,qi)=>
+  DIMS.netz.members.forEach((n,ni)=>DIMS.abrart.members.forEach((r,ri)=>{
+    const b = BETRAG[s.id][ki]*SAISON[s.id][qi]/4 * NETZ[k.id][ni] * ART_B[ri];
+    const a = ANZAHL[s.id][ki]*ABR_Q[qi]/4 * NETZ[k.id][ni] * ART_A[ri];
+    FACTS.push({sparte:s.id,kunde:k.id,quartal:q.id,netz:n.id,abrart:r.id,betrag:b,anzahl:a});
+  })))));
+const TOTAL_CELLS = FACTS.length;
+
+// --- Zustand ----------------------------------------------------------------
+const sel = {};
+DIMKEYS.forEach(dk=>sel[dk]=new Set(DIMS[dk].members.map(m=>m.id)));
+let measure="betrag";
+let ax = {x:"sparte", y:"quartal", z:"kunde"};
+let rowDim="sparte", colDim="quartal";
+
+const nf0=new Intl.NumberFormat("de-DE",{maximumFractionDigits:0});
+const nf1=new Intl.NumberFormat("de-DE",{minimumFractionDigits:1,maximumFractionDigits:1});
+function fmt(v){ if(v===null||!isFinite(v)) return "–"; return measure==="betrag"?nf1.format(v):nf0.format(v); }
+const MEAS_LABEL={betrag:"Abrechnungsbetrag in T€",anzahl:"Anzahl Abrechnungen",avg:"Ø Betrag je Abrechnung in €"};
+
+function inSel(f){ return DIMKEYS.every(dk=>sel[dk].has(f[dk])); }
+function agg(rows){
+  let b=0,a=0;
+  for(const f of rows){ b+=f.betrag; a+=f.anzahl; }
+  if(measure==="betrag") return b;
+  if(measure==="anzahl") return a;
+  return a>0 ? b*1000/a : null;
+}
+function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function memberColor(dk,m){
+  return m.color ? cssVar(m.color) : cssVar(PAL[DIMS[dk].members.indexOf(m)%PAL.length]);
+}
+
+// --- Rail -------------------------------------------------------------------
+function buildRail(){
+  const rail=document.getElementById("rail");
+  rail.innerHTML="";
+  DIMKEYS.forEach(dk=>{
+    const d=DIMS[dk];
+    const box=document.createElement("div");
+    box.className="panel dimblock";
+    box.innerHTML='<div class="dimhead"><h3>'+d.label+'</h3><span class="role" data-role="'+dk+'"></span></div>'+
+                  '<div class="chips"></div>';
+    const chips=box.querySelector(".chips");
+    d.members.forEach(m=>{
+      const b=document.createElement("button");
+      b.type="button"; b.className="chip"+(m.cls?" "+m.cls:"");
+      b.innerHTML='<span class="dot"></span>'+m.label;
+      b.addEventListener("click",()=>{
+        if(sel[dk].has(m.id)){ if(sel[dk].size>1) sel[dk].delete(m.id); } else sel[dk].add(m.id);
+        render();
+      });
+      chips.appendChild(b);
+    });
+    const all=document.createElement("button");
+    all.className="minilink"; all.type="button"; all.textContent="alle auswählen";
+    all.addEventListener("click",()=>{ d.members.forEach(m=>sel[dk].add(m.id)); render(); });
+    box.appendChild(all);
+    rail.appendChild(box);
+  });
+
+  const pres=document.createElement("div");
+  pres.className="panel presets";
+  pres.innerHTML='<div class="dimhead" style="margin-bottom:4px"><h3>Beispiele</h3></div>';
+  [["all","Roll-up","Gesamtwürfel, keine Einschränkung"],
+   ["slice","Slice: Gas","eine Scheibe entlang der Sparte"],
+   ["slice2","Slice: Turnus","eine Scheibe entlang der Abrechnungsart"],
+   ["dice","Dice","Strom + Fernwärme, Gewerbe + Industrie, Winterquartale, Netz Nord + Süd"]
+  ].forEach(([p,t,s])=>{
+    const b=document.createElement("button");
+    b.className="preset"; b.type="button"; b.dataset.preset=p;
+    b.innerHTML="<b>"+t+"</b><span>"+s+"</span>";
+    b.addEventListener("click",()=>applyPreset(p));
+    pres.appendChild(b);
+  });
+  rail.appendChild(pres);
+}
+function applyPreset(p){
+  const all=dk=>DIMS[dk].members.map(m=>m.id);
+  DIMKEYS.forEach(dk=>sel[dk]=new Set(all(dk)));
+  if(p==="slice") sel.sparte=new Set(["GAS"]);
+  if(p==="slice2") sel.abrart=new Set(["TURN"]);
+  if(p==="dice"){
+    sel.sparte=new Set(["STROM","FERNW"]);
+    sel.kunde=new Set(["GEW","IND"]);
+    sel.quartal=new Set(["Q1","Q4"]);
+    sel.netz=new Set(["NORD","SUED"]);
+  }
+  render();
+}
+function syncRail(){
+  DIMKEYS.forEach(dk=>{
+    const box=document.querySelectorAll("#rail .dimblock")[DIMKEYS.indexOf(dk)];
+    [...box.querySelectorAll(".chip")].forEach((b,i)=>b.setAttribute("aria-pressed", sel[dk].has(DIMS[dk].members[i].id)));
+    const role=box.querySelector(".role");
+    const onAx = Object.keys(ax).find(k=>ax[k]===dk);
+    const names={x:"Achse rechts",y:"Achse links",z:"Achse hoch"};
+    role.textContent = onAx ? names[onAx] : "verdichtet";
+    role.classList.toggle("on", !!onAx);
+  });
+}
+
+// --- Selects ----------------------------------------------------------------
+function fill(selEl,current){
+  selEl.innerHTML="";
+  DIMKEYS.forEach(dk=>selEl.appendChild(new Option(DIMS[dk].label,dk)));
+  selEl.value=current;
+}
+function buildSelects(){
+  const sx=document.getElementById("ax-x"), sy=document.getElementById("ax-y"), sz=document.getElementById("ax-z");
+  const axEls={x:sx,y:sy,z:sz};
+  Object.keys(axEls).forEach(k=>{
+    fill(axEls[k],ax[k]);
+    axEls[k].addEventListener("change",()=>{
+      const v=axEls[k].value;
+      const other=Object.keys(ax).find(o=>o!==k && ax[o]===v);
+      if(other) ax[other]=ax[k];           // tauschen statt doppelt belegen
+      ax[k]=v;
+      Object.keys(axEls).forEach(o=>axEls[o].value=ax[o]);
+      render();
+    });
+  });
+  const r=document.getElementById("sel-rows"), c=document.getElementById("sel-cols");
+  fill(r,rowDim); fill(c,colDim);
+  r.addEventListener("change",()=>{ if(r.value===colDim) colDim=rowDim; rowDim=r.value; c.value=colDim; render(); });
+  c.addEventListener("change",()=>{ if(c.value===rowDim) rowDim=colDim; colDim=c.value; r.value=rowDim; render(); });
+  document.getElementById("sel-measure").addEventListener("change",e=>{ measure=e.target.value; render(); });
+}
+
+// --- Würfel -----------------------------------------------------------------
+const SVG="http://www.w3.org/2000/svg";
+function drawCube(){
+  const svg=document.getElementById("iso");
+  while(svg.childNodes.length>1) svg.removeChild(svg.lastChild);
+
+  const MX=DIMS[ax.x].members, MY=DIMS[ax.y].members, MZ=DIMS[ax.z].members;
+  const nx=MX.length, ny=MY.length, nz=MZ.length;
+  const S=Math.min(46, 560/((nx+ny)*0.866), 250/((nx+ny)*0.5+nz*0.78));
+  const KX=S*0.866, KY=S*0.5, KZ=S*0.78, gap=0.12;
+  const proj=(a,b,c)=>[(a-b)*KX,(a+b)*KY-c*KZ];
+  const poly=pts=>pts.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
+
+  const g=document.createElementNS(SVG,"g");
+  const txt=(x,y,s,cls,anchor)=>{
+    const t=document.createElementNS(SVG,"text");
+    t.setAttribute("x",x.toFixed(1)); t.setAttribute("y",y.toFixed(1)); t.setAttribute("class",cls);
+    if(anchor) t.setAttribute("text-anchor",anchor);
+    t.textContent=s; g.appendChild(t); return t;
+  };
+
+  // Achsenbeschriftung, durchweg an den vorderen Kanten
+  MX.forEach((m,a)=>{ const p=proj(a+0.5,ny,0); txt(p[0]-12,p[1]+20,m.label,"tick-label","end"); });
+  MY.forEach((m,b)=>{ const p=proj(nx,b+0.5,0); txt(p[0]+12,p[1]+20,m.label,"tick-label","start"); });
+  MZ.forEach((m,c)=>{ const p=proj(-0.15,ny,c+0.5); txt(p[0]-8,p[1]+4,m.label,"tick-label","end"); });
+
+  // Zellen, von hinten nach vorn
+  const cells=[];
+  MX.forEach((mx,a)=>MY.forEach((my,b)=>MZ.forEach((mz,c)=>cells.push({mx,my,mz,a,b,c,d:a+b+c}))));
+  cells.sort((u,v)=>u.d-v.d);
+
+  cells.forEach(cell=>{
+    const {a,b,c}=cell;
+    const a0=a+gap,a1=a+1-gap,b0=b+gap,b1=b+1-gap,c0=c+gap,c1=c+1-gap;
+    const active = sel[ax.x].has(cell.mx.id) && sel[ax.y].has(cell.my.id) && sel[ax.z].has(cell.mz.id);
+    const base = memberColor(ax.x, cell.mx);
+    const grp=document.createElementNS(SVG,"g");
+    grp.setAttribute("class","cell"); grp.setAttribute("tabindex","0");
+    const lbl=cell.mx.label+" · "+cell.my.label+" · "+cell.mz.label;
+    grp.setAttribute("aria-label",lbl+(active?" (selektiert)":" (gefiltert)"));
+    [[ [proj(a0,b0,c1),proj(a1,b0,c1),proj(a1,b1,c1),proj(a0,b1,c1)], 1.0],
+     [ [proj(a1,b0,c0),proj(a1,b1,c0),proj(a1,b1,c1),proj(a1,b0,c1)], 0.74],
+     [ [proj(a0,b1,c0),proj(a1,b1,c0),proj(a1,b1,c1),proj(a0,b1,c1)], 0.54]
+    ].forEach(([pts,sh])=>{
+      const el=document.createElementNS(SVG,"polygon");
+      el.setAttribute("points",poly(pts)); el.setAttribute("class","f");
+      el.setAttribute("fill",base);
+      el.setAttribute("fill-opacity",(active?sh:sh*0.15).toFixed(3));
+      grp.appendChild(el);
+    });
+    const payload=()=>cellInfo(cell,active);
+    grp.addEventListener("pointerenter",ev=>{ showTip(payload()); moveTip(ev); });
+    grp.addEventListener("pointermove",moveTip);
+    grp.addEventListener("pointerleave",hideTip);
+    grp.addEventListener("focus",()=>{
+      const r=grp.getBoundingClientRect(), w=document.querySelector(".cube").getBoundingClientRect();
+      showTip(payload());
+      tip.style.left=Math.max(4,r.left-w.left+r.width/2-110)+"px";
+      tip.style.top=Math.max(4,r.top-w.top-100)+"px";
+    });
+    grp.addEventListener("blur",hideTip);
+    g.appendChild(grp);
+  });
+
+  svg.appendChild(g);
+  const bb=g.getBBox();
+  svg.setAttribute("viewBox",[bb.x-14,bb.y-14,bb.width+28,bb.height+28].map(v=>v.toFixed(1)).join(" "));
+
+  const free=DIMKEYS.filter(dk=>dk!==ax.x&&dk!==ax.y&&dk!==ax.z);
+  document.getElementById("axlegend").innerHTML =
+    "<span>↘ nach rechts unten: <b>"+DIMS[ax.x].label+"</b></span>"+
+    "<span>↙ nach links unten: <b>"+DIMS[ax.y].label+"</b></span>"+
+    "<span>↑ nach oben: <b>"+DIMS[ax.z].label+"</b></span>"+
+    "<span class='off'>verdichtet: "+free.map(dk=>DIMS[dk].label).join(", ")+"</span>";
+  document.getElementById("cube-caption").textContent =
+    nx+" × "+ny+" × "+nz+" = "+(nx*ny*nz)+" sichtbare Zellen. Jede Zelle ist bereits verdichtet über "+
+    free.map(dk=>DIMS[dk].label).join(" und ")+
+    ". Volle Farbe: in der Selektion. Blass: herausgefiltert, aber weiterhin im Würfel vorhanden. Zeigen Sie auf eine Zelle für den Einzelwert.";
+}
+
+function cellInfo(cell,active){
+  const free=DIMKEYS.filter(dk=>dk!==ax.x&&dk!==ax.y&&dk!==ax.z);
+  const rows=FACTS.filter(f=>f[ax.x]===cell.mx.id&&f[ax.y]===cell.my.id&&f[ax.z]===cell.mz.id
+                            && free.every(dk=>sel[dk].has(f[dk])));
+  let b=0,a=0; rows.forEach(f=>{b+=f.betrag;a+=f.anzahl;});
+  return "<b>"+cell.mx.label+" · "+cell.my.label+" · "+cell.mz.label+"</b><br>"+
+    nf1.format(b)+" T€ · "+nf0.format(a)+" Abr.<br>Ø "+nf0.format(a>0?b*1000/a:0)+" € je Abrechnung<br>"+
+    "aus "+rows.length+" Basiszellen<br>"+(active?"in der Selektion":"herausgefiltert");
+}
+
+const tip=document.getElementById("tip");
+function showTip(html){ tip.innerHTML=html; tip.hidden=false; }
+function moveTip(ev){
+  const w=document.querySelector(".cube").getBoundingClientRect();
+  let x=ev.clientX-w.left+14, y=ev.clientY-w.top+14;
+  x=Math.min(x,w.width-260);
+  tip.style.left=Math.max(4,x)+"px"; tip.style.top=Math.max(4,y)+"px";
+}
+function hideTip(){ tip.hidden=true; }
+
+// --- Operation --------------------------------------------------------------
+function describeOp(){
+  const restricted=DIMKEYS.filter(dk=>sel[dk].size<DIMS[dk].members.length);
+  const single=restricted.filter(dk=>sel[dk].size===1);
+  let name,desc;
+  if(restricted.length===0){
+    name="Roll-up";
+    desc="Keine Dimension eingeschränkt. Der Bericht zeigt den vollständigen Würfel über alle fünf Dimensionen.";
+  } else if(restricted.length===1 && single.length===1){
+    const dk=restricted[0], m=DIMS[dk].members.find(x=>sel[dk].has(x.id));
+    name="Slice";
+    desc="Die Dimension "+DIMS[dk].label+" ist auf "+m.label+" fixiert, alle übrigen bleiben vollständig. Der Würfel verliert eine Kante.";
+  } else {
+    name="Dice";
+    desc="Eingeschränkt: "+restricted.map(dk=>DIMS[dk].label+" ("+sel[dk].size+"/"+DIMS[dk].members.length+")").join(", ")+
+      ". Es bleibt ein kleinerer Teilwürfel mit unveränderter Dimensionalität.";
+  }
+  document.getElementById("op-name").textContent=name;
+  document.getElementById("op-desc").textContent=desc;
+  const n=FACTS.filter(inSel).length;
+  document.getElementById("op-count").innerHTML=
+    nf0.format(n)+" von "+nf0.format(TOTAL_CELLS)+" Basiszellen<br>"+
+    DIMKEYS.map(dk=>sel[dk].size).join(" × ");
+}
+
+// --- Pivot ------------------------------------------------------------------
+function renderTable(){
+  const t=document.getElementById("pivot");
+  const free=DIMKEYS.filter(dk=>dk!==rowDim&&dk!==colDim);
+  const rowsM=DIMS[rowDim].members.filter(m=>sel[rowDim].has(m.id));
+  const colsM=DIMS[colDim].members.filter(m=>sel[colDim].has(m.id));
+  const data=FACTS.filter(inSel);
+
+  document.getElementById("pivot-caption").textContent=
+    MEAS_LABEL[measure]+" · Aufriss "+DIMS[rowDim].label+" × "+DIMS[colDim].label+
+    " · verdichtet über "+free.map(dk=>DIMS[dk].label+" ("+sel[dk].size+"/"+DIMS[dk].members.length+")").join(", ");
+
+  let max=0;
+  const grid=rowsM.map(rm=>colsM.map(cm=>{
+    const v=agg(data.filter(f=>f[rowDim]===rm.id&&f[colDim]===cm.id));
+    if(v!==null&&v>max) max=v;
+    return v;
+  }));
+
+  let html="<thead><tr><th scope='col'>"+DIMS[rowDim].label+"</th>";
+  colsM.forEach(cm=>html+="<th scope='col'>"+cm.label+"</th>");
+  html+="<th scope='col'>Gesamt</th></tr></thead><tbody>";
+  rowsM.forEach((rm,i)=>{
+    html+="<tr><th scope='row'>"+rm.label+"</th>";
+    grid[i].forEach(v=>{
+      const w=(v!==null&&max>0)?Math.max(2,Math.round(v/max*54)):0;
+      html+="<td>"+fmt(v)+"<span class='bar' style='width:"+w+"px'></span></td>";
+    });
+    html+="<td>"+fmt(agg(data.filter(f=>f[rowDim]===rm.id)))+"</td></tr>";
+  });
+  html+="</tbody><tfoot><tr class='total'><th scope='row'>Gesamt</th>";
+  colsM.forEach(cm=>html+="<td>"+fmt(agg(data.filter(f=>f[colDim]===cm.id)))+"</td>");
+  html+="<td>"+fmt(agg(data))+"</td></tr></tfoot>";
+
+  const cap=t.querySelector("caption");
+  t.innerHTML=""; t.appendChild(cap); t.insertAdjacentHTML("beforeend",html);
+  renderChart(rowsM,colsM,grid);
+}
+
+// --- Liniengraph zur Tabelle ------------------------------------------------
+function niceMax(v){
+  if(!(v>0)) return 1;
+  const e=Math.pow(10,Math.floor(Math.log10(v)));
+  const f=v/e;
+  const s=f<=1?1:f<=1.5?1.5:f<=2?2:f<=2.5?2.5:f<=5?5:f<=7.5?7.5:10;
+  return s*e;
+}
+function renderChart(rowsM,colsM,grid){
+  const svg=document.getElementById("chart");
+  while(svg.childNodes.length>1) svg.removeChild(svg.lastChild);
+  const W=780,H=300,PL=66,PR=18,PT=18,PB=46;
+  svg.setAttribute("viewBox","0 0 "+W+" "+H);
+
+  const vals=grid.flat().filter(v=>v!==null&&isFinite(v));
+  const top=niceMax(Math.max(0,...vals));
+  const iw=W-PL-PR, ih=H-PT-PB;
+  const n=colsM.length;
+  const xAt=i=> n===1 ? PL+iw/2 : PL + i*iw/(n-1);
+  const yAt=v=> PT + ih - (v/top)*ih;
+
+  const g=document.createElementNS(SVG,"g");
+  const add=(tag,attrs,text)=>{
+    const el=document.createElementNS(SVG,tag);
+    for(const k in attrs) el.setAttribute(k,attrs[k]);
+    if(text!==undefined) el.textContent=text;
+    g.appendChild(el); return el;
+  };
+
+  for(let i=0;i<=4;i++){
+    const v=top*i/4, y=yAt(v);
+    add("line",{x1:PL,y1:y.toFixed(1),x2:W-PR,y2:y.toFixed(1),class:i===0?"axis":"grid"});
+    add("text",{x:PL-10,y:(y+4).toFixed(1),"text-anchor":"end"},fmt(v));
+  }
+  add("text",{x:14,y:PT+ih/2,"text-anchor":"middle",transform:"rotate(-90 14 "+(PT+ih/2)+")"},MEAS_LABEL[measure]);
+
+  colsM.forEach((cm,i)=>{
+    const x=xAt(i);
+    add("line",{x1:x.toFixed(1),y1:PT,x2:x.toFixed(1),y2:(PT+ih).toFixed(1),class:"grid","stroke-dasharray":"2 4"});
+    add("text",{x:x.toFixed(1),y:PT+ih+20,"text-anchor":"middle",class:"cat"},cm.label);
+  });
+  add("text",{x:(PL+iw/2).toFixed(1),y:H-8,"text-anchor":"middle"},DIMS[colDim].label);
+
+  rowsM.forEach((rm,r)=>{
+    const col=memberColor(rowDim,rm);
+    const pts=grid[r].map((v,i)=>v===null||!isFinite(v)?null:[xAt(i),yAt(v)]).filter(Boolean);
+    if(pts.length>1) add("path",{d:"M"+pts.map(p=>p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" L "),class:"ln",stroke:col});
+    pts.forEach(p=>add("circle",{cx:p[0].toFixed(1),cy:p[1].toFixed(1),r:3.6,fill:col,class:"pt"}));
+  });
+
+  svg.appendChild(g);
+  document.getElementById("chart-legend").innerHTML =
+    rowsM.map(rm=>"<span><i style='background:"+memberColor(rowDim,rm)+"'></i>"+rm.label+"</span>").join("");
+}
+
+// --- Code -------------------------------------------------------------------
+function renderCode(){
+  const conds=[];
+  DIMKEYS.forEach(dk=>{
+    if(sel[dk].size<DIMS[dk].members.length){
+      const vals=DIMS[dk].members.filter(m=>sel[dk].has(m.id)).map(m=>"'"+m.id+"'");
+      conds.push("  "+DIMS[dk].tech.padEnd(11)+(vals.length===1?" = "+vals[0]:" IN ( "+vals.join(", ")+" )"));
+    }
+  });
+  const free=DIMKEYS.filter(dk=>dk!==rowDim&&dk!==colDim);
+  const w=conds.length
+    ? "<span class='kw'>WHERE</span>\n"+conds.join("\n  <span class='kw'>AND</span>\n")
+    : "<span class='cm'>-- keine Einschränkung: vollständiger Würfel</span>";
+  document.getElementById("code").innerHTML=
+"<span class='cm'>-- Selektion und Aufriss des Berichts auf der Analytical Query</span>\n"+
+"<span class='kw'>SELECT</span> "+DIMS[rowDim].tech+", "+DIMS[colDim].tech+",\n"+
+"       <span class='kw'>SUM</span>( AbrechnungsbetragT ) <span class='kw'>AS</span> Betrag,\n"+
+"       <span class='kw'>SUM</span>( AnzahlAbrechnungen ) <span class='kw'>AS</span> Anzahl\n"+
+"  <span class='kw'>FROM</span> Z_C_ABRECHNUNG_SPARTE\n"+
+w+"\n"+
+" <span class='kw'>GROUP BY</span> "+DIMS[rowDim].tech+", "+DIMS[colDim].tech+"\n"+
+"<span class='cm'>-- nicht im Aufriss und daher verdichtet: "+free.map(dk=>DIMS[dk].tech).join(", ")+"</span>";
+}
+
+function render(){ syncRail(); describeOp(); drawCube(); renderTable(); renderCode(); }
+
+buildRail(); buildSelects(); render();
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",drawCube);
+})();
+</script>
+
+<script>
+/* Meldet die Inhaltshoehe an die einbettende Seite (iframe ohne Scrollbalken). */
+(function(){
+  if (window.parent === window) return;
+  var last = 0;
+  function post(){
+    var h = Math.ceil(document.documentElement.getBoundingClientRect().height);
+    if (Math.abs(h - last) > 4){
+      last = h;
+      window.parent.postMessage({ type: "brandeis:height", id: "slicing-dicing", height: h }, "*");
+    }
+  }
+  if (window.ResizeObserver) new ResizeObserver(post).observe(document.documentElement);
+  window.addEventListener("load", post);
+  window.addEventListener("resize", post);
+  setTimeout(post, 300);
+})();
+</script>
+</body>
+</html>
